@@ -1,0 +1,66 @@
+name: Claude Code Review
+
+on:
+  pull_request:
+    types: [opened, synchronize, ready_for_review, reopened]
+    paths:
+      - "app/**"
+      - "components/**"
+      - "lib/**"
+      - "*.ts"
+      - "*.tsx"
+      - "*.js"
+      - "*.json"
+
+jobs:
+  claude-review:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+      issues: write
+      id-token: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Record timestamp before review
+        id: pre-review
+        run: echo "timestamp=$(date -u +%Y-%m-%dT%H:%M:%SZ)" >> "$GITHUB_OUTPUT"
+
+      - name: Run Claude Code Review
+        id: claude-review
+        uses: anthropics/claude-code-action@v1
+        with:
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          plugin_marketplaces: 'https://github.com/anthropics/claude-code.git'
+          plugins: 'code-review@claude-code-plugins'
+          prompt: '/code-review:code-review ${{ github.repository }}/pull/${{ github.event.pull_request.number }}'
+
+      - name: Comment if no review findings
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          PR_NUMBER=${{ github.event.pull_request.number }}
+          BEFORE="${{ steps.pre-review.outputs.timestamp }}"
+
+          NEW_ISSUE_COMMENTS=$(gh api --paginate --slurp \
+            "repos/${{ github.repository }}/issues/${PR_NUMBER}/comments" \
+            | jq "[.[][] | select(.created_at > \"${BEFORE}\")] | length")
+
+          NEW_REVIEW_COMMENTS=$(gh api --paginate --slurp \
+            "repos/${{ github.repository }}/pulls/${PR_NUMBER}/comments" \
+            | jq "[.[][] | select(.created_at > \"${BEFORE}\")] | length")
+
+          NEW_REVIEWS=$(gh api --paginate --slurp \
+            "repos/${{ github.repository }}/pulls/${PR_NUMBER}/reviews" \
+            | jq "[.[][] | select(.submitted_at > \"${BEFORE}\")] | length")
+
+          TOTAL=$((NEW_ISSUE_COMMENTS + NEW_REVIEW_COMMENTS + NEW_REVIEWS))
+
+          if [ "$TOTAL" -eq 0 ]; then
+            gh pr comment "${PR_NUMBER}" --body "✅ Claude Code Reviewでレビューしましたが、指摘事項はありませんでした。"
+          fi
