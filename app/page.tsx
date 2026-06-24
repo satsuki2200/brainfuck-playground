@@ -50,7 +50,8 @@ export default function Home() {
 
   const compile = useCallback(
     (src: string, userInput: string) => {
-      const jm = buildJumpMap(src);
+      const filtered = src.replace(/[^><+\-.,[\]]/g, "");
+      const jm = buildJumpMap(filtered);
       if (typeof jm === "string") {
         setParseError(jm);
         setJumpMap(null);
@@ -158,7 +159,7 @@ export default function Home() {
 
   const handleShare = () => {
     const encoded = btoa(unescape(encodeURIComponent(code)));
-    const url = `${window.location.origin}${window.location.pathname}?code=${encoded}`;
+    const url = `${window.location.origin}${window.location.pathname}?code=${encodeURIComponent(encoded)}`;
     navigator.clipboard.writeText(url).then(() => {
       setShareMsg("URLをコピーしました！");
       setTimeout(() => setShareMsg(""), 2000);

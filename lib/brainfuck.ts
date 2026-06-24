@@ -129,5 +129,12 @@ export function runBF(
     if (current.status === "error" || current.status === "done") break;
     remaining--;
   }
+  if (current.status !== "done" && current.status !== "error" && current.instrPointer < code.length) {
+    return {
+      ...current,
+      status: "error",
+      errorMessage: `最大ステップ数 (${maxSteps.toLocaleString()}) に達しました。無限ループの可能性があります。`,
+    };
+  }
   return current;
 }
