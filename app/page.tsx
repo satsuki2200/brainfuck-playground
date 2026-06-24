@@ -16,6 +16,8 @@ import {
 
 const DEFAULT_CODE = `++++++++[>++++[>++>+++>+++>+<<<<-]>+>+>->>+[<]<-]>>.>---.+++++++..+++.>>.<-.<.+++.------.--------.>>+.>++.`;
 const SPEED_OPTIONS = [
+  { label: "x0.25", ms: 800 },
+  { label: "x0.5", ms: 400 },
   { label: "x1", ms: 200 },
   { label: "x2", ms: 80 },
   { label: "x5", ms: 30 },
@@ -41,7 +43,7 @@ function HomeContent() {
   const [jumpMap, setJumpMap] = useState<Map<number, number> | null>(null);
   const [parseError, setParseError] = useState<string | null>(null);
   const [isAutoPlaying, setIsAutoPlaying] = useState(false);
-  const [speedIdx, setSpeedIdx] = useState(0);
+  const [speedIdx, setSpeedIdx] = useState(2);
   const [showAscii, setShowAscii] = useState(false);
   const [shareMsg, setShareMsg] = useState("");
   const autoPlayRef = useRef<ReturnType<typeof setTimeout> | null>(null);
