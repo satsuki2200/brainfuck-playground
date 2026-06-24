@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef, useCallback } from "react";
+import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import CodeEditor from "@/components/CodeEditor";
 import TapeView from "@/components/TapeView";
@@ -23,7 +24,18 @@ const SPEED_OPTIONS = [
 ];
 
 export default function Home() {
-  const [code, setCode] = useState(DEFAULT_CODE);
+  const searchParams = useSearchParams();
+  const [code, setCode] = useState(() => {
+    const encoded = searchParams.get("code");
+    if (encoded) {
+      try {
+        return atob(encoded);
+      } catch {
+        return DEFAULT_CODE;
+      }
+    }
+    return DEFAULT_CODE;
+  });
   const [input, setInput] = useState("");
   const [state, setState] = useState<BFState | null>(null);
   const [jumpMap, setJumpMap] = useState<Map<number, number> | null>(null);
@@ -33,20 +45,6 @@ export default function Home() {
   const [showAscii, setShowAscii] = useState(false);
   const [shareMsg, setShareMsg] = useState("");
   const autoPlayRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  // Load code from URL on mount
-  useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const encoded = params.get("code");
-    if (encoded) {
-      try {
-        const decoded = atob(encoded);
-        setCode(decoded);
-      } catch {
-        // ignore invalid base64
-      }
-    }
-  }, []);
 
   const compile = useCallback(
     (src: string, userInput: string) => {
