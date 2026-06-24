@@ -46,6 +46,7 @@ function HomeContent() {
   const [speedIdx, setSpeedIdx] = useState(2);
   const [showAscii, setShowAscii] = useState(false);
   const [shareMsg, setShareMsg] = useState("");
+  const [totalSteps, setTotalSteps] = useState<number | null>(null);
   const autoPlayRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const compile = useCallback(
@@ -75,6 +76,7 @@ function HomeContent() {
     const filtered = code.replace(/[^><+\-.,[\]]/g, "");
     const finalState = runBF({ ...s, status: "running" }, filtered, jm);
     setState(finalState);
+    if (finalState.status === "done") setTotalSteps(finalState.steps);
     setJumpMap(jm);
   };
 
@@ -116,6 +118,7 @@ function HomeContent() {
     setState(null);
     setJumpMap(null);
     setParseError(null);
+    setTotalSteps(null);
   };
 
   // Auto-play loop
@@ -134,7 +137,10 @@ function HomeContent() {
         }
         const filtered = getFilteredCode(code);
         const next = stepBF(prev, filtered, jumpMap);
-        if (next.status === "done" || next.status === "error") {
+        if (next.status === "done") {
+          setIsAutoPlaying(false);
+          setTotalSteps(next.steps);
+        } else if (next.status === "error") {
           setIsAutoPlaying(false);
         }
         return next;
@@ -292,9 +298,14 @@ function HomeContent() {
             {/* Status */}
             {state && (
               <div className="text-xs text-zinc-500 font-mono">
-                {state.status === "done" && <span className="text-emerald-400">✓ 完了 ({state.steps.toLocaleString()} ステップ)</span>}
+                {state.status === "done" && <span className="text-emerald-400">✓ 完了 — {state.steps.toLocaleString()} ステップ</span>}
                 {state.status === "error" && <span className="text-red-400">✗ エラー: {state.errorMessage}</span>}
-                {state.status === "paused" && <span className="text-yellow-400">⏸ ポーズ中 — IP: {state.instrPointer} / {filtered.length} (ステップ: {state.steps.toLocaleString()})</span>}
+                {state.status === "paused" && (
+                  <span className="text-yellow-400">
+                    ⏸ ステップ: {state.steps.toLocaleString()}{totalSteps !== null ? ` / ${totalSteps.toLocaleString()}` : ""}
+                    <span className="text-zinc-600 ml-2">命令: {state.instrPointer} / {filtered.length}</span>
+                  </span>
+                )}
               </div>
             )}
           </div>
