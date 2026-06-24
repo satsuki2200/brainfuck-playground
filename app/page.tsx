@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import CodeEditor from "@/components/CodeEditor";
@@ -23,7 +23,7 @@ const SPEED_OPTIONS = [
   { label: "x50", ms: 2 },
 ];
 
-export default function Home() {
+function HomeContent() {
   const searchParams = useSearchParams();
   const [code, setCode] = useState(() => {
     const encoded = searchParams.get("code");
@@ -345,5 +345,13 @@ export default function Home() {
         </div>
       </main>
     </div>
+  );
+}
+
+export default function Home() {
+  return (
+    <Suspense>
+      <HomeContent />
+    </Suspense>
   );
 }
