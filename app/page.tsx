@@ -118,7 +118,6 @@ function HomeContent() {
     setState(null);
     setJumpMap(null);
     setParseError(null);
-    setTotalSteps(null);
   };
 
   // Auto-play loop
@@ -160,6 +159,7 @@ function HomeContent() {
     const sample = SAMPLES[idx];
     setCode(sample.code);
     setInput(sample.input ?? "");
+    setTotalSteps(null);
     handleReset();
   };
 
@@ -234,7 +234,7 @@ function HomeContent() {
               <label className="text-xs text-zinc-500 uppercase tracking-wide mb-1 block">コード</label>
               <CodeEditor
                 code={code}
-                onChange={(v) => { setCode(v); handleReset(); }}
+                onChange={(v) => { setCode(v); setTotalSteps(null); handleReset(); }}
                 highlightIndex={origHighlight}
                 disabled={isAutoPlaying}
               />
@@ -303,7 +303,7 @@ function HomeContent() {
                 {state.status === "paused" && (
                   <span className="text-yellow-400">
                     ⏸ ステップ: {state.steps.toLocaleString()}{totalSteps !== null ? ` / ${totalSteps.toLocaleString()}` : ""}
-                    <span className="text-zinc-600 ml-2">命令: {state.instrPointer} / {filtered.length}</span>
+                    <span className="text-zinc-600"> · 命令: {state.instrPointer} / {filtered.length}</span>
                   </span>
                 )}
               </div>
